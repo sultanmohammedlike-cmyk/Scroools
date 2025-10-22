@@ -182,6 +182,25 @@
             font-size: 12px;
         }
 
+        .sound-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .sound-control i {
+            font-size: 20px;
+        }
+
         /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
@@ -410,33 +429,6 @@
             <!-- Videos will be dynamically loaded here -->
         </div>
 
-        <!-- Sidebar Actions -->
-        <div class="sidebar-actions">
-            <div class="action-item">
-                <div class="action-icon">
-                    <i class="fas fa-heart"></i>
-                </div>
-                <div class="action-count">125K</div>
-            </div>
-            <div class="action-item">
-                <div class="action-icon">
-                    <i class="fas fa-comment"></i>
-                </div>
-                <div class="action-count">2.1K</div>
-            </div>
-            <div class="action-item">
-                <div class="action-icon">
-                    <i class="fas fa-share"></i>
-                </div>
-                <div class="action-count">542</div>
-            </div>
-            <div class="action-item">
-                <div class="action-icon">
-                    <i class="fas fa-music"></i>
-                </div>
-            </div>
-        </div>
-
         <!-- Bottom Navigation -->
         <div class="bottom-nav">
             <div class="nav-item active">
@@ -532,6 +524,10 @@
         const postBtn = document.getElementById('postBtn');
         const uploadLoader = document.getElementById('uploadLoader');
 
+        // Global variables
+        let currentPlayingVideo = null;
+        let currentSoundState = {}; // Track sound state per video
+
         // Load videos on page load
         document.addEventListener('DOMContentLoaded', loadVideos);
 
@@ -626,8 +622,18 @@
             videos.forEach(video => {
                 const videoElement = document.createElement('div');
                 videoElement.className = 'video-container';
+                videoElement.setAttribute('data-video-id', video.id);
+                
+                // Initialize sound state for this video
+                if (!currentSoundState[video.id]) {
+                    currentSoundState[video.id] = false; // Default to muted
+                }
+                
                 videoElement.innerHTML = `
-                    <video class="video-player" loop muted>
+                    <div class="sound-control" data-video-id="${video.id}">
+                        <i class="fas ${currentSoundState[video.id] ? 'fa-volume-up' : 'fa-volume-mute'}"></i>
+                    </div>
+                    <video class="video-player" loop ${currentSoundState[video.id] ? '' : 'muted'}>
                         <source src="${video.videoUrl}" type="video/mp4">
                     </video>
                     <div class="video-info">
@@ -672,20 +678,66 @@
                 
                 // Add click event to play/pause video
                 const videoPlayer = videoElement.querySelector('.video-player');
-                videoElement.addEventListener('click', () => {
-                    if (videoPlayer.paused) {
-                        videoPlayer.play();
-                    } else {
-                        videoPlayer.pause();
+                const soundControl = videoElement.querySelector('.sound-control');
+                
+                // Handle video click for play/pause
+                videoElement.addEventListener('click', (e) => {
+                    // Don't trigger if clicking on sound control or action buttons
+                    if (e.target.closest('.sound-control') || e.target.closest('.sidebar-actions')) {
+                        return;
                     }
+                    
+                    if (videoPlayer.paused) {
+                        playVideo(videoPlayer, video.id);
+                    } else {
+                        pauseVideo(videoPlayer);
+                    }
+                });
+                
+                // Handle sound control click
+                soundControl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleSound(videoPlayer, video.id, soundControl);
                 });
             });
             
             // Auto-play first video
             const firstVideo = videoFeed.querySelector('.video-player');
             if (firstVideo) {
-                firstVideo.play();
+                playVideo(firstVideo, videos[0].id);
             }
+        }
+
+        // Play video and pause others
+        function playVideo(videoPlayer, videoId) {
+            // Pause currently playing video
+            if (currentPlayingVideo && currentPlayingVideo !== videoPlayer) {
+                pauseVideo(currentPlayingVideo);
+            }
+            
+            // Play the selected video
+            videoPlayer.play();
+            currentPlayingVideo = videoPlayer;
+            
+            // Update UI to show playing state if needed
+        }
+
+        // Pause video
+        function pauseVideo(videoPlayer) {
+            videoPlayer.pause();
+            if (currentPlayingVideo === videoPlayer) {
+                currentPlayingVideo = null;
+            }
+        }
+
+        // Toggle sound on/off for a video
+        function toggleSound(videoPlayer, videoId, soundControl) {
+            currentSoundState[videoId] = !currentSoundState[videoId];
+            videoPlayer.muted = !currentSoundState[videoId];
+            
+            // Update sound icon
+            const soundIcon = soundControl.querySelector('i');
+            soundIcon.className = currentSoundState[videoId] ? 'fas fa-volume-up' : 'fas fa-volume-mute';
         }
 
         // Handle video visibility for autoplay
@@ -697,11 +749,20 @@
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                const video = entry.target.querySelector('.video-player');
+                const videoContainer = entry.target;
+                const videoPlayer = videoContainer.querySelector('.video-player');
+                const videoId = parseInt(videoContainer.getAttribute('data-video-id'));
+                
                 if (entry.isIntersecting) {
-                    video.play();
+                    // Only play if no other video is playing or if this is the first one
+                    if (!currentPlayingVideo || currentPlayingVideo === videoPlayer) {
+                        playVideo(videoPlayer, videoId);
+                    }
                 } else {
-                    video.pause();
+                    // Only pause if this is the currently playing video
+                    if (currentPlayingVideo === videoPlayer) {
+                        pauseVideo(videoPlayer);
+                    }
                 }
             });
         }, observerOptions);
@@ -714,4 +775,4 @@
         }, 500);
     </script>
 </body>
-  </html>
+            </html>
