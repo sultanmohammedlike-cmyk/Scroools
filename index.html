@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok Clone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #000;
+            --secondary-color: #fff;
+            --accent-color: #fe2c55;
+            --gray-color: #121212;
+            --light-gray: #727272;
+            --border-color: #2f2f2f;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fe2c55, #25f4ee);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-icons i {
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-top: 60px;
+            padding-bottom: 70px;
+            scroll-snap-type: y mandatory;
+        }
+
+        .video-container {
+            position: relative;
+            height: calc(100vh - 130px);
+            scroll-snap-align: start;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .video-player {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid var(--accent-color);
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .follow-btn {
+            margin-left: auto;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .video-caption {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .video-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            color: var(--light-gray);
+        }
+
+        /* Sidebar Actions */
+        .sidebar-actions {
+            position: absolute;
+            right: 15px;
+            bottom: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .action-icon i {
+            font-size: 24px;
+        }
+
+        .action-count {
+            font-size: 12px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0;
+            background-color: var(--primary-color);
+            border-top: 1px solid var(--border-color);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .nav-icon {
+            font-size: 22px;
+            margin-bottom: 3px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+        }
+
+        .nav-item.active .nav-icon,
+        .nav-item.active .nav-label {
+            color: var(--accent-color);
+        }
+
+        .upload-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #fe2c55, #25f4ee);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .upload-btn i {
+            font-size: 20px;
+            color: white;
+        }
+
+        /* Upload Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .upload-modal {
+            background-color: var(--gray-color);
+            width: 90%;
+            max-width: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .upload-modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            color: var(--secondary-color);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            padding: 20px;
+        }
+
+        .upload-area {
+            border: 2px dashed var(--light-gray);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent-color);
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            color: var(--light-gray);
+        }
+
+        .upload-text {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .upload-subtext {
+            font-size: 12px;
+            color: var(--light-gray);
+        }
+
+        .caption-input {
+            width: 100%;
+            background-color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 12px;
+            color: var(--secondary-color);
+            resize: none;
+            margin-bottom: 15px;
+        }
+
+        .post-btn {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .post-btn:hover {
+            background-color: #e41e4a;
+        }
+
+        .post-btn:disabled {
+            background-color: var(--light-gray);
+            cursor: not-allowed;
+        }
+
+        /* Video Preview */
+        .video-preview {
+            display: none;
+            width: 100%;
+            max-height: 300px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        /* Loading Animation */
+        .loader {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 500px) {
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .header, .bottom-nav {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">TikTok</div>
+            <div class="header-icons">
+                <i class="fas fa-search"></i>
+                <i class="fas fa-inbox"></i>
+            </div>
+        </div>
+
+        <!-- Main Content - Video Feed -->
+        <div class="main-content" id="videoFeed">
+            <!-- Videos will be dynamically loaded here -->
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="sidebar-actions">
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="action-count">125K</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="action-count">2.1K</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="fas fa-share"></i>
+                </div>
+                <div class="action-count">542</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active">
+                <div class="nav-icon"><i class="fas fa-home"></i></div>
+                <div class="nav-label">Home</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-compass"></i></div>
+                <div class="nav-label">Discover</div>
+            </div>
+            <div class="upload-btn" id="openUpload">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-comment-dots"></i></div>
+                <div class="nav-label">Inbox</div>
+            </div>
+            <div class="nav-item">
+                <div class="nav-icon"><i class="fas fa-user"></i></div>
+                <div class="nav-label">Profile</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="upload-modal">
+            <div class="modal-header">
+                <div class="modal-title">Upload Video</div>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Select video to upload</div>
+                    <div class="upload-subtext">Or drag and drop a file</div>
+                    <input type="file" id="videoInput" accept="video/*" style="display: none;">
+                </div>
+                <video class="video-preview" id="videoPreview" controls></video>
+                <textarea class="caption-input" id="captionInput" placeholder="Write a caption..."></textarea>
+                <div class="loader" id="uploadLoader"></div>
+                <button class="post-btn" id="postBtn" disabled>Post</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample video data
+        const videos = [
+            {
+                id: 1,
+                username: "creative_user",
+                avatar: "https://randomuser.me/api/portraits/women/44.jpg",
+                videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-girl-in-neon-sign-1232-large.mp4",
+                caption: "Just having fun with neon lights! #art #creative",
+                likes: "125K",
+                comments: "2.1K",
+                shares: "542"
+            },
+            {
+                id: 2,
+                username: "dance_queen",
+                avatar: "https://randomuser.me/api/portraits/women/68.jpg",
+                videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-group-of-friends-dancing-happily-at-a-party-4640-large.mp4",
+                caption: "Weekend vibes with friends! #dance #party",
+                likes: "89K",
+                comments: "1.5K",
+                shares: "321"
+            },
+            {
+                id: 3,
+                username: "travel_dude",
+                avatar: "https://randomuser.me/api/portraits/men/32.jpg",
+                videoUrl: "https://assets.mixkit.co/videos/preview/mixkit-going-down-a-curved-highway-through-a-mountain-34561-large.mp4",
+                caption: "Beautiful mountain views on my road trip! #travel #nature",
+                likes: "210K",
+                comments: "3.7K",
+                shares: "892"
+            }
+        ];
+
+        // DOM Elements
+        const videoFeed = document.getElementById('videoFeed');
+        const uploadModal = document.getElementById('uploadModal');
+        const openUploadBtn = document.getElementById('openUpload');
+        const closeModalBtn = document.getElementById('closeModal');
+        const uploadArea = document.getElementById('uploadArea');
+        const videoInput = document.getElementById('videoInput');
+        const videoPreview = document.getElementById('videoPreview');
+        const captionInput = document.getElementById('captionInput');
+        const postBtn = document.getElementById('postBtn');
+        const uploadLoader = document.getElementById('uploadLoader');
+
+        // Load videos on page load
+        document.addEventListener('DOMContentLoaded', loadVideos);
+
+        // Open upload modal
+        openUploadBtn.addEventListener('click', () => {
+            uploadModal.classList.add('active');
+        });
+
+        // Close upload modal
+        closeModalBtn.addEventListener('click', closeModal);
+
+        // Click on upload area to trigger file input
+        uploadArea.addEventListener('click', () => {
+            videoInput.click();
+        });
+
+        // Handle file selection
+        videoInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                const url = URL.createObjectURL(file);
+                
+                videoPreview.src = url;
+                videoPreview.style.display = 'block';
+                postBtn.disabled = false;
+            }
+        });
+
+        // Handle post button click
+        postBtn.addEventListener('click', function() {
+            const caption = captionInput.value.trim();
+            
+            if (!videoPreview.src || videoPreview.src === '') {
+                alert('Please select a video first');
+                return;
+            }
+            
+            // Show loading animation
+            uploadLoader.style.display = 'block';
+            postBtn.disabled = true;
+            
+            // Simulate upload process
+            setTimeout(() => {
+                // Create new video object
+                const newVideo = {
+                    id: videos.length + 1,
+                    username: "you",
+                    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
+                    videoUrl: videoPreview.src,
+                    caption: caption || "Check out my new video!",
+                    likes: "0",
+                    comments: "0",
+                    shares: "0"
+                };
+                
+                // Add to videos array
+                videos.unshift(newVideo);
+                
+                // Reload videos
+                loadVideos();
+                
+                // Close modal and reset form
+                closeModal();
+                resetUploadForm();
+                
+                // Hide loader
+                uploadLoader.style.display = 'none';
+                
+                // Show success message
+                alert('Video posted successfully!');
+            }, 2000);
+        });
+
+        // Close modal function
+        function closeModal() {
+            uploadModal.classList.remove('active');
+        }
+
+        // Reset upload form
+        function resetUploadForm() {
+            videoInput.value = '';
+            videoPreview.src = '';
+            videoPreview.style.display = 'none';
+            captionInput.value = '';
+            postBtn.disabled = true;
+        }
+
+        // Load videos to the feed
+        function loadVideos() {
+            videoFeed.innerHTML = '';
+            
+            videos.forEach(video => {
+                const videoElement = document.createElement('div');
+                videoElement.className = 'video-container';
+                videoElement.innerHTML = `
+                    <video class="video-player" loop muted>
+                        <source src="${video.videoUrl}" type="video/mp4">
+                    </video>
+                    <div class="video-info">
+                        <div class="user-info">
+                            <img src="${video.avatar}" alt="${video.username}" class="avatar">
+                            <div class="username">@${video.username}</div>
+                            <button class="follow-btn">Follow</button>
+                        </div>
+                        <div class="video-caption">${video.caption}</div>
+                        <div class="video-stats">
+                            <div><i class="fas fa-music"></i> Original Sound - ${video.username}</div>
+                        </div>
+                    </div>
+                    <div class="sidebar-actions">
+                        <div class="action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="action-count">${video.likes}</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="action-count">${video.comments}</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-share"></i>
+                            </div>
+                            <div class="action-count">${video.shares}</div>
+                        </div>
+                        <div class="action-item">
+                            <div class="action-icon">
+                                <i class="fas fa-music"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                videoFeed.appendChild(videoElement);
+                
+                // Add click event to play/pause video
+                const videoPlayer = videoElement.querySelector('.video-player');
+                videoElement.addEventListener('click', () => {
+                    if (videoPlayer.paused) {
+                        videoPlayer.play();
+                    } else {
+                        videoPlayer.pause();
+                    }
+                });
+            });
+            
+            // Auto-play first video
+            const firstVideo = videoFeed.querySelector('.video-player');
+            if (firstVideo) {
+                firstVideo.play();
+            }
+        }
+
+        // Handle video visibility for autoplay
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.8
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target.querySelector('.video-player');
+                if (entry.isIntersecting) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+        }, observerOptions);
+
+        // Observe video containers after they're loaded
+        setTimeout(() => {
+            document.querySelectorAll('.video-container').forEach(container => {
+                observer.observe(container);
+            });
+        }, 500);
+    </script>
+</body>
+  </html>
